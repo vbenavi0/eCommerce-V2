@@ -1,6 +1,22 @@
 import React from 'react'
 
 export default function Home() {
+  var index = 1;
+  var heroId;
+  function changeHero(){//change hero img
+    document.getElementById('hiddenImg').style.opacity = 0;
+    heroId = 'hero' + index;
+    document.getElementById(heroId).style.opacity = 0;
+    if (index === 4){
+        index = 1;
+    }
+    else {
+        index++;
+    }
+    heroId = 'hero' + index;
+    document.getElementById(heroId).style.opacity = 1;
+  }
+  setInterval(changeHero, 3000);
   return (
     <>
   <meta charSet="UTF-8" />

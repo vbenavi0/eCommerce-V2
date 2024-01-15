@@ -1,6 +1,45 @@
 import React from 'react'
 
 export default function Sneakers() {
+  var subTotal = 0;
+  var counter = 0;
+  function addToCart(item, price){ //Adds items to cart
+    console.log(item+' has been added to cart');
+    // alert('Added to shopping cart.');
+    let docCart = document.getElementById('cart');
+    let newItem = document.createElement('p');
+    newItem.textContent = item + " : $" +price;
+    console.log(newItem);
+    docCart.appendChild(newItem);
+    subTotal += price;
+    document.getElementById('subTotal').textContent = 'Subtotal: $'+ subTotal;
+    showCartAdd();
+    setTimeout(hideCartAdd, 2000);
+}
+
+function showCartAdd(){ //Show pop-up for adding item to cart
+    document.getElementById('addToCart').style.zIndex ='1';
+    document.getElementById('addToCart').style.width ='80%';
+}
+
+function hideCartAdd(){ //Hide pop-up
+    document.getElementById('addToCart').style.zIndex ='-1';
+    document.getElementById('addToCart').style.width ='0%';
+}
+
+function showCart(){ //shows or hides cart
+    console.log('show')
+    if(counter%2 === 0){
+        document.getElementById('cart').style.zIndex ='1';
+        document.getElementById('cart').style.width ='80%';
+        counter++
+    }
+    else if(counter%2 === 1){
+        document.getElementById('cart').style.zIndex =-'1';
+        document.getElementById('cart').style.width ='0%';
+        counter++
+    }
+}
   return (
     <>
   <meta charSet="UTF-8" />
@@ -38,7 +77,7 @@ export default function Sneakers() {
       <a className="navLink" href="/contact">
         Contact
       </a>
-      <button className="material-symbols-outlined">shopping_cart</button>
+      <button className="material-symbols-outlined" onClick={showCart}>shopping_cart</button>
     </nav>
   </header>
   <main>
@@ -64,7 +103,7 @@ export default function Sneakers() {
         <p className="price">$160.00</p>
         <button
           className="buy"
-          onclick="addToCart('Jordan 1 Bred Toe', 160.00)"
+          onClick = {() => {addToCart('Jordan 1 Bred Toe', 160.00)}}
         >
           Add to Cart
         </button>
@@ -78,7 +117,7 @@ export default function Sneakers() {
         <p className="price">$160.00</p>
         <button
           className="buy"
-          onclick="addToCart('Jordan 1 Royal Toe', 160.00)"
+          onClick = {() => {addToCart('Jordan 1 Royal Toe', 160.00)}}
         >
           Add to Cart
         </button>
@@ -92,7 +131,7 @@ export default function Sneakers() {
         <p className="price">$160.00</p>
         <button
           className="buy"
-          onclick="addToCart('Jordan 1 Pine Green', 160.00)"
+          onClick = {() => {addToCart('Jordan 1 Pine Green', 160.00)}}
         >
           Add to Cart
         </button>
@@ -110,7 +149,7 @@ export default function Sneakers() {
         <p className="price">$160.00</p>
         <button
           className="buy"
-          onclick="addToCart('Jordan 1 Court Purple', 160.00)"
+          onClick = {() => {addToCart('Jordan 1 Court Purple', 160.00)}}
         >
           Add to Cart
         </button>
