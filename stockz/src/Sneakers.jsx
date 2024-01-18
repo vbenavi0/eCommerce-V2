@@ -1,8 +1,19 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import ReactDOM from 'react-dom'
+import Product from './components/product';
+import Footer from './components/footer';
+import MapProds from './components/mapProds';
+import { createRoot } from 'react-dom/client';
 
 export default function Sneakers() {
+  let url = window.location.href
+  console.log(url)
+  let url0=('http://localhost:5000')
+  console.log(url0)
   var subTotal = 0;
   var counter = 0;
+  var prodGrid
+  var root = ''
   function addToCart(item, price){ //Adds items to cart
     console.log(item+' has been added to cart');
     // alert('Added to shopping cart.');
@@ -39,6 +50,50 @@ function showCart(){ //shows or hides cart
         document.getElementById('cart').style.width ='0%';
         counter++
     }
+}
+
+function loadAnimation(){
+  var loadMsg = document.getElementById('loading')
+  loadMsg.style.visibility = 'visible'
+  loadMsg.style.width = '25%'
+  loadMsg.style.height = 'auto'
+    loadMsg.textContent+='.'
+    if(loadMsg.textContent === 'Loading....'){
+      loadMsg.textContent = 'Loading'
+    }
+}
+
+useEffect(()=>{
+  console.log('loaded')
+  sortFilter();
+}, [])
+
+function sortFilter(){
+  const prodGrid = document.getElementById('prodGrid')
+  if(root == ''){
+    root = createRoot(prodGrid)
+    prodGrid.innerHTML=''
+  }
+  else{
+    root.render()
+  }
+  var loadMsg = document.getElementById('loading')
+  let loadAni = setInterval(loadAnimation, 500)
+  var sortBy = document.getElementById('sort').value
+  var filterBy = document.getElementById('filter').value
+  prodGrid.style.visibility = 'hidden'
+  console.log(sortBy)
+  console.log('http://localhost:5000/sneakers?sort='+sortBy+'&filter='+filterBy)
+  fetch(url0+'/sneakers?sort='+sortBy+'&filter='+filterBy)
+  .then(response=>
+    response.json())
+  .then((data)=>{
+    console.log(data);
+      root.render(data.map((product) => <Product key = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price}/>))
+      prodGrid.style.visibility = 'visible'
+      loadMsg.style.visibility = 'hidden'
+      clearInterval(loadAni)
+    })
 }
   return (
     <>
@@ -91,7 +146,28 @@ function showCart(){ //shows or hides cart
     <h4>Sneakers</h4>
     <br />
     <h2 id="addToCart">Added to Cart</h2>
-    <section className="grid1">
+    <div id = 'filters'>
+      <div class = 'filter'>
+        <label>Sort by: </label>
+        <select id = "sort" onChange={()=>{sortFilter()}}>
+          <option value="DEF">Featured</option>
+          <option value="LTH">Low To High</option>
+          <option value="HTL">High To Low</option>
+        </select>
+      </div>
+      <div class = 'filter'>
+        <label>Filter: </label>
+        <select id = "filter" onChange={()=>{sortFilter()}}>
+          <option value="ALL">All</option>
+          <option value="J1">Jordan 1</option>
+          <option value="J4">Jordan 4</option>
+          <option value="DL">Dunk</option>
+        </select>
+      </div>
+    </div>
+    <p id = 'loading'>Loading</p>
+    <section className="grid1" id='prodGrid'>
+    <Product pName = "Jordan 1 Retro High" pDesc = "Bred Toe" pImg = "images/J1R.png" pPrice = "$200"></Product>
       {" "}
       {/* Product Grid */}
       <div className="product" id="J1R">
@@ -278,117 +354,7 @@ function showCart(){ //shows or hides cart
       </div>
     </section>
   </main>
-  <footer id="footer1">
-    <p id="f1">StockZ - Retail, Not Resale</p>
-    <div id="f2">
-      <div className="fBlock">
-        <a className="footLinkBold" href="/sneakers">
-          Sneakers
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/sneakers">
-          Jordan 1
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/sneakers">
-          Jordan 4
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/sneakers">
-          Dunk
-        </a>
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/apparel">
-          Apparel
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/apparel">
-          Supreme
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/apparel">
-          Essentials
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/apparel">
-          Vlone
-        </a>
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/electronics">
-          Electronics
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/electronics">
-          Playstation
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/electronics">
-          Xbox
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/electronics">
-          Nintendo
-        </a>{" "}
-        <br />
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/collectibles">
-          Collectibles
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/collectibles">
-          Skatebaords
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/collectibles">
-          Figures
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/collectibles">
-          Lego
-        </a>
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/contact">
-          Contact
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/contact">
-          FAQS
-        </a>
-        <br />
-        <a className="footLink" href="/contact">
-          Form
-        </a>
-        <br />
-        <a className="footLink" href="/contact">
-          Help
-        </a>
-        <br />
-      </div>
-    </div>
-  </footer>
-  <footer id="footer2">
-    <div>
-      <a href="https://www.facebook.com/">
-        <img className="fIcon" src="images/FB.png" alt="Facebook Logo" />
-      </a>
-      <a href="https://www.instagram.com/">
-        <img className="fIcon" src="images/IG.png" alt="Instagram Logo" />
-      </a>
-      <a href="https://twitter.com/">
-        <img className="fIcon" src="images/X.png" alt="Twitter Logo" />
-      </a>
-      <a href="https://www.youtube.com/">
-        <img className="fIcon" src="images/YT.png" alt="Youtube Logo" />
-      </a>
-    </div>
-    <div className="f3">
-      <p>©2023 StockZ. All Rights Reserved.</p>
-    </div>
-  </footer>
+  <Footer/>
 </>
   )
 }
