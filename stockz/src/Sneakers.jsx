@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react'
-import ReactDOM from 'react-dom'
 import Product from './components/product';
 import Footer from './components/footer';
-import MapProds from './components/mapProds';
 import { createRoot } from 'react-dom/client';
+
+// import MapProds from './components/mapProds';
+// import ReactDOM from 'react-dom'
 
 export default function Sneakers() {
   let url = window.location.href
@@ -63,14 +64,9 @@ function loadAnimation(){
     }
 }
 
-useEffect(()=>{
-  console.log('loaded')
-  sortFilter();
-}, [])
-
 function sortFilter(){
   const prodGrid = document.getElementById('prodGrid')
-  if(root == ''){
+  if(root === ''){
     root = createRoot(prodGrid)
     prodGrid.innerHTML=''
   }
@@ -92,9 +88,14 @@ function sortFilter(){
       root.render(data.map((product) => <Product key = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price}/>))
       prodGrid.style.visibility = 'visible'
       loadMsg.style.visibility = 'hidden'
+      loadMsg.style.height = '0'
       clearInterval(loadAni)
     })
 }
+useEffect(()=>{
+  console.log('loaded')
+  sortFilter();
+}, [])
   return (
     <>
   <meta charSet="UTF-8" />
@@ -151,17 +152,17 @@ function sortFilter(){
         <label>Sort by: </label>
         <select id = "sort" onChange={()=>{sortFilter()}}>
           <option value="DEF">Featured</option>
-          <option value="LTH">Low To High</option>
-          <option value="HTL">High To Low</option>
+          <option value="LTH">Price: Low To High</option>
+          <option value="HTL">Price: High To Low</option>
         </select>
       </div>
       <div class = 'filter'>
         <label>Filter: </label>
         <select id = "filter" onChange={()=>{sortFilter()}}>
           <option value="ALL">All</option>
+          <option value="DL">Dunk</option>
           <option value="J1">Jordan 1</option>
           <option value="J4">Jordan 4</option>
-          <option value="DL">Dunk</option>
         </select>
       </div>
     </div>

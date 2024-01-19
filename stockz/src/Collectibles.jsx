@@ -1,6 +1,100 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import Product from './components/product';
+import Footer from './components/footer';
+import { createRoot } from 'react-dom/client';
 
 export default function Collectibles() {
+  let url = window.location.href
+  console.log(url)
+  let url0=('http://localhost:5000')
+  console.log(url0)
+  var subTotal = 0;
+  var counter = 0;
+  var prodGrid
+  var root = ''
+  function addToCart(item, price){ //Adds items to cart
+    console.log(item+' has been added to cart');
+    // alert('Added to shopping cart.');
+    let docCart = document.getElementById('cart');
+    let newItem = document.createElement('p');
+    newItem.textContent = item + " : $" +price;
+    console.log(newItem);
+    docCart.appendChild(newItem);
+    subTotal += price;
+    document.getElementById('subTotal').textContent = 'Subtotal: $'+ subTotal;
+    showCartAdd();
+    setTimeout(hideCartAdd, 2000);
+}
+
+function showCartAdd(){ //Show pop-up for adding item to cart
+    document.getElementById('addToCart').style.zIndex ='1';
+    document.getElementById('addToCart').style.width ='80%';
+}
+
+function hideCartAdd(){ //Hide pop-up
+    document.getElementById('addToCart').style.zIndex ='-1';
+    document.getElementById('addToCart').style.width ='0%';
+}
+
+function showCart(){ //shows or hides cart
+    console.log('show')
+    if(counter%2 === 0){
+        document.getElementById('cart').style.zIndex ='1';
+        document.getElementById('cart').style.width ='80%';
+        counter++
+    }
+    else if(counter%2 === 1){
+        document.getElementById('cart').style.zIndex =-'1';
+        document.getElementById('cart').style.width ='0%';
+        counter++
+    }
+}
+
+function loadAnimation(){
+  var loadMsg = document.getElementById('loading')
+  loadMsg.style.visibility = 'visible'
+  loadMsg.style.width = '25%'
+  loadMsg.style.height = 'auto'
+    loadMsg.textContent+='.'
+    if(loadMsg.textContent === 'Loading....'){
+      loadMsg.textContent = 'Loading'
+    }
+}
+
+function sortFilter(){
+  const prodGrid = document.getElementById('prodGrid')
+  if(root === ''){
+    root = createRoot(prodGrid)
+    prodGrid.innerHTML=''
+  }
+  else{
+    root.render()
+  }
+  var loadMsg = document.getElementById('loading')
+  let loadAni = setInterval(loadAnimation, 500)
+  var sortBy = document.getElementById('sort').value
+  var filterBy = document.getElementById('filter').value
+  prodGrid.style.visibility = 'hidden'
+  console.log(sortBy)
+  console.log('http://localhost:5000/collectibles?sort='+sortBy+'&filter='+filterBy)
+  fetch(url0+'/collectibles?sort='+sortBy+'&filter='+filterBy)
+  .then(response=>
+    response.json())
+  .then((data)=>{
+    console.log(data);
+      root.render(data.map((product) => <Product key = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price}/>))
+      prodGrid.style.visibility = 'visible'
+      loadMsg.style.visibility = 'hidden'
+      loadMsg.style.height = '0'
+      clearInterval(loadAni)
+    })
+}
+
+useEffect(()=>{
+  console.log('loaded')
+  sortFilter();
+}, [])
+
   return (
     <>
   <meta charSet="UTF-8" />
@@ -52,7 +146,27 @@ export default function Collectibles() {
     <h4>Collectibles</h4>
     <br />
     <h2 id="addToCart">Added to Cart</h2>
-    <section className="grid1">
+    <div id = 'filters'>
+      <div class = 'filter'>
+        <label>Sort by: </label>
+        <select id = "sort" onChange={()=>{sortFilter()}}>
+          <option value="DEF">Featured</option>
+          <option value="LTH">Price: Low To High</option>
+          <option value="HTL">Price: High To Low</option>
+        </select>
+      </div>
+      <div class = 'filter'>
+        <label>Filter: </label>
+        <select id = "filter" onChange={()=>{sortFilter()}}>
+          <option value="ALL">All</option>
+          <option value="HT">Hot Toys</option>
+          <option value="LG">LEGO</option>
+          <option value="PL">Palace</option>
+        </select>
+      </div>
+    </div>
+    <p id = 'loading'>Loading</p>
+    <section className="grid1" id='prodGrid'>
       {" "}
       {/* Product Grid */}
       <div className="product" id="SDS">
