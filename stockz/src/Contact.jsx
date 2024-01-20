@@ -1,4 +1,7 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import CartProd from './components/cartProd';
+import Footer from './components/footer';
+import { createRoot } from 'react-dom/client';
 
 export default function Contact() {
   var uName;
@@ -6,8 +9,13 @@ export default function Contact() {
   var uQuestion;
   var uComment;
   var warning;
-  var subTotal = 0;
+  let url = window.location.href
+  console.log(url)
+  let url0=('http://localhost:5000')
+  console.log(url0)
+  var subTotal = 0.0;
   var counter = 0;
+  var cartRoot = ""
   function formSubmit(){ //form validation
     warning = "";
     document.getElementById('warning').innerHTML = ""
@@ -63,43 +71,82 @@ function hideSubmit(){ //Hides User Submission
     document.getElementById('submission').style.width ='0%';
 }
 
-
-function addToCart(item, price){ //Adds items to cart
-  console.log(item+' has been added to cart');
-  // alert('Added to shopping cart.');
-  let docCart = document.getElementById('cart');
-  let newItem = document.createElement('p');
-  newItem.textContent = item + " : $" +price;
-  console.log(newItem);
-  docCart.appendChild(newItem);
-  subTotal += price;
-  document.getElementById('subTotal').textContent = 'Subtotal: $'+ subTotal;
-  showCartAdd();
-  setTimeout(hideCartAdd, 2000);
-}
+document.addEventListener('remove', function() {
+  let cartItems = document.getElementById('cartItems')
+  subTotal=0
+  cartRoot = createRoot(cartItems)
+        if(cartRoot === ''){
+          cartRoot = createRoot(cartItems)
+        }
+  fetch(url0+'/getCart')
+          .then(response=>
+          response.json())
+          .then((data)=>{
+          data.forEach(product => {
+            subTotal+=parseFloat(product.prod_price)
+          });
+          cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
+          if(subTotal!==0)document.getElementById('removeAll').style.visibility='visible'
+          document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)})
+          if(subTotal===0)document.getElementById('removeAll').style.visibility='hidden'
+})
 
 function showCartAdd(){ //Show pop-up for adding item to cart
-  document.getElementById('addToCart').style.zIndex ='1';
-  document.getElementById('addToCart').style.width ='80%';
+    document.getElementById('addToCart').style.zIndex ='1';
+    document.getElementById('addToCart').style.width ='80%';
 }
 
 function hideCartAdd(){ //Hide pop-up
-  document.getElementById('addToCart').style.zIndex ='-1';
-  document.getElementById('addToCart').style.width ='0%';
+    document.getElementById('addToCart').style.zIndex ='-1';
+    document.getElementById('addToCart').style.width ='0%';
 }
 
 function showCart(){ //shows or hides cart
-  console.log('show')
-  if(counter%2 === 0){
-      document.getElementById('cart').style.zIndex ='1';
-      document.getElementById('cart').style.width ='80%';
-      counter++
-  }
-  else if(counter%2 === 1){
-      document.getElementById('cart').style.zIndex =-'1';
-      document.getElementById('cart').style.width ='0%';
-      counter++
-  }
+  let cart = document.getElementById('cart')
+  let cartItems = document.getElementById('cartItems')
+    if(counter%2 === 0){
+        cart.style.zIndex ='1';
+        cart.style.width ='90%';
+        counter++
+        subTotal=0
+        if(cartRoot === ''){
+          cartRoot = createRoot(cartItems)
+          cartItems.innerHTML=''
+        }
+        else{
+          cartRoot.render()
+        }
+        fetch(url0+'/getCart')
+          .then(response=>
+          response.json())
+          .then((data)=>{
+          data.forEach(product => {
+            subTotal+=parseFloat(product.prod_price)
+          });
+          cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
+          if(subTotal!==0)document.getElementById('removeAll').style.visibility='visible'
+          document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)})
+    }
+    else if(counter%2 === 1){
+        cart.style.zIndex =-'1';
+        cart.style.width ='0%';
+        counter++
+    }
+}
+
+function clearCart(){ //shows or hides cart
+  let cartItems = document.getElementById('cartItems')
+  subTotal=0.0
+    if(cartRoot === ''){
+      cartRoot = createRoot(cartItems)
+      cartItems.innerHTML=''
+    }
+    else{
+      cartRoot.render()
+    }
+    fetch(url0+'/clearCart')
+    document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)
+    document.getElementById('removeAll').style.visibility='hidden'
 }
 
   return (
@@ -139,10 +186,17 @@ function showCart(){ //shows or hides cart
       <a className="navLink" href="/contact">
         Contact
       </a>
-      <button className="material-symbols-outlined">shopping_cart</button>
+      <button className="material-symbols-outlined" onClick={showCart}>shopping_cart</button>
     </nav>
   </header>
   <main>
+  <section id="cart">
+      <button id = 'close' onClick={showCart}>X</button>
+      <h2>Shopping Cart:</h2>
+      <div id = "cartItems"></div>
+      <button id="removeAll" onClick={()=>clearCart()}>Remove All</button>
+      <h3 id="subTotal">Subtotal: $0</h3>  
+    </section>
     <br />
     <h4>Contact</h4>
     <br />
@@ -198,116 +252,6 @@ function showCart(){ //shows or hides cart
     <p id="submission">Submission</p>
     <br />
   </main>
-  <footer id="footer1">
-    <p id="f1">StockZ - Retail, Not Resale</p>
-    <div id="f2">
-      <div className="fBlock">
-        <a className="footLinkBold" href="/sneakers">
-          Sneakers
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/sneakers">
-          Jordan 1
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/sneakers">
-          Jordan 4
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/sneakers">
-          Dunk
-        </a>
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/apparel">
-          Apparel
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/apparel">
-          Supreme
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/apparel">
-          Essentials
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/apparel">
-          Vlone
-        </a>
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/electronics">
-          Electronics
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/electronics">
-          Playstation
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/electronics">
-          Xbox
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/electronics">
-          Nintendo
-        </a>{" "}
-        <br />
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/collectibles">
-          Collectibles
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/collectibles">
-          Skatebaords
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/collectibles">
-          Figures
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/collectibles">
-          Lego
-        </a>
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/contact">
-          Contact
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/contact">
-          FAQS
-        </a>
-        <br />
-        <a className="footLink" href="/contact">
-          Form
-        </a>
-        <br />
-        <a className="footLink" href="/contact">
-          Help
-        </a>
-        <br />
-      </div>
-    </div>
-  </footer>
-  <footer id="footer2">
-    <div>
-      <a href="https://www.facebook.com/">
-        <img className="fIcon" src="images/FB.png" alt="Facebook Logo" />
-      </a>
-      <a href="https://www.instagram.com/">
-        <img className="fIcon" src="images/IG.png" alt="Instagram Logo" />
-      </a>
-      <a href="https://twitter.com/">
-        <img className="fIcon" src="images/X.png" alt="Twitter Logo" />
-      </a>
-      <a href="https://www.youtube.com/">
-        <img className="fIcon" src="images/YT.png" alt="Youtube Logo" />
-      </a>
-    </div>
-    <div className="f3">
-      <p>©2023 StockZ. All Rights Reserved.</p>
-    </div>
-  </footer>
+  <Footer/>
 </>)
 }

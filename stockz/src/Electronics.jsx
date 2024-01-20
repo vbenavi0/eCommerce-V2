@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import Product from './components/product';
+import CartProd from './components/cartProd';
 import Footer from './components/footer';
 import { createRoot } from 'react-dom/client';
 
@@ -8,23 +9,35 @@ export default function Electronics() {
   console.log(url)
   let url0=('http://localhost:5000')
   console.log(url0)
-  var subTotal = 0;
+  var subTotal = 0.0;
   var counter = 0;
-  var prodGrid
   var root = ''
-  function addToCart(item, price){ //Adds items to cart
-    console.log(item+' has been added to cart');
-    // alert('Added to shopping cart.');
-    let docCart = document.getElementById('cart');
-    let newItem = document.createElement('p');
-    newItem.textContent = item + " : $" +price;
-    console.log(newItem);
-    docCart.appendChild(newItem);
-    subTotal += price;
-    document.getElementById('subTotal').textContent = 'Subtotal: $'+ subTotal;
-    showCartAdd();
-    setTimeout(hideCartAdd, 2000);
-}
+  var cartRoot = ""
+
+document.addEventListener('add', function() {
+  showCartAdd();
+  setTimeout(hideCartAdd, 2000);
+})
+
+document.addEventListener('remove', function() {
+  let cartItems = document.getElementById('cartItems')
+  subTotal=0
+  cartRoot = createRoot(cartItems)
+        if(cartRoot === ''){
+          cartRoot = createRoot(cartItems)
+        }
+  fetch(url0+'/getCart')
+          .then(response=>
+          response.json())
+          .then((data)=>{
+          data.forEach(product => {
+            subTotal+=parseFloat(product.prod_price)
+          });
+          cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
+          if(subTotal!==0)document.getElementById('removeAll').style.visibility='visible'
+          document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)})
+          if(subTotal===0)document.getElementById('removeAll').style.visibility='hidden'
+})
 
 function showCartAdd(){ //Show pop-up for adding item to cart
     document.getElementById('addToCart').style.zIndex ='1';
@@ -37,17 +50,51 @@ function hideCartAdd(){ //Hide pop-up
 }
 
 function showCart(){ //shows or hides cart
-    console.log('show')
+  let cart = document.getElementById('cart')
+  let cartItems = document.getElementById('cartItems')
     if(counter%2 === 0){
-        document.getElementById('cart').style.zIndex ='1';
-        document.getElementById('cart').style.width ='80%';
+        cart.style.zIndex ='1';
+        cart.style.width ='90%';
         counter++
+        subTotal=0
+        if(cartRoot === ''){
+          cartRoot = createRoot(cartItems)
+          cartItems.innerHTML=''
+        }
+        else{
+          cartRoot.render()
+        }
+        fetch(url0+'/getCart')
+          .then(response=>
+          response.json())
+          .then((data)=>{
+          data.forEach(product => {
+            subTotal+=parseFloat(product.prod_price)
+          });
+          cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
+          if(subTotal!==0)document.getElementById('removeAll').style.visibility='visible'
+          document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)})
     }
     else if(counter%2 === 1){
-        document.getElementById('cart').style.zIndex =-'1';
-        document.getElementById('cart').style.width ='0%';
+        cart.style.zIndex =-'1';
+        cart.style.width ='0%';
         counter++
     }
+}
+
+function clearCart(){ //shows or hides cart
+  let cartItems = document.getElementById('cartItems')
+  subTotal=0.0
+    if(cartRoot === ''){
+      cartRoot = createRoot(cartItems)
+      cartItems.innerHTML=''
+    }
+    else{
+      cartRoot.render()
+    }
+    fetch(url0+'/clearCart')
+    document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)
+    document.getElementById('removeAll').style.visibility='hidden'
 }
 
 function loadAnimation(){
@@ -87,7 +134,7 @@ function sortFilter(){
     response.json())
   .then((data)=>{
     console.log(data);
-      root.render(data.map((product) => <Product key = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price}/>))
+      root.render(data.map((product) => <Product key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
       prodGrid.style.visibility = 'visible'
       loadMsg.style.visibility = 'hidden'
       loadMsg.style.height = '0'
@@ -131,22 +178,23 @@ function sortFilter(){
       <a className="navLink" href="/contact">
         Contact
       </a>
-      <button className="material-symbols-outlined">shopping_cart</button>
+      <button className="material-symbols-outlined" onClick={showCart}>shopping_cart</button>
     </nav>
   </header>
   <main>
     <section id="cart">
+      <button id = 'close' onClick={showCart}>X</button>
       <h2>Shopping Cart:</h2>
-      <h3 id="subTotal">Subtotal: $0</h3>
-      <br />
-      <br />
+      <div id = "cartItems"></div>
+      <button id="removeAll" onClick={()=>clearCart()}>Remove All</button>
+      <h3 id="subTotal">Subtotal: $0</h3>  
     </section>
     <br />
     <h4>Electronics</h4>
     <br />
     <h2 id="addToCart">Added to Cart</h2>
     <div id = 'filters'>
-      <div class = 'filter'>
+      <div className = 'filter'>
         <label>Sort by: </label>
         <select id = "sort" onChange={()=>{sortFilter()}}>
           <option value="DEF">Featured</option>
@@ -154,335 +202,21 @@ function sortFilter(){
           <option value="HTL">Price: High To Low</option>
         </select>
       </div>
-      <div class = 'filter'>
+      <div className = 'filter'>
         <label>Filter: </label>
         <select id = "filter" onChange={()=>{sortFilter()}}>
           <option value="ALL">All</option>
-          <option value="XB">Xbox</option>
-          <option value="NT">Nintendo</option>
-          <option value="PS">Playstation</option>
+          <option value="ES">Essentials</option>
+          <option value="SP">Supreme</option>
+          <option value="VL">Vlone</option>
         </select>
       </div>
     </div>
     <p id = 'loading'>Loading</p>
     <section className="grid1" id='prodGrid'>
-      {" "}
-      {/* Product Grid */}
-      <div className="product" id="PS5B">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/PS5B.png"
-          alt="PlayStation 5 Blue Ray Edition"
-        />
-        <p className="title">Sony PlayStation 5</p>
-        <p className="disc">Blue Ray Edition</p>
-        <p className="price">$500.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('PlayStation 5 Blue Ray Edition', 500.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="PS5D">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/PS5D.png"
-          alt="PlayStation 5 Digital Edition"
-        />
-        <p className="title">Sony PlayStation 5</p>
-        <p className="disc">Digital Edition</p>
-        <p className="price">$400.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('PlayStation 5 Digital Edition', 400.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="PS5S">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/PS5S.png"
-          alt="PlayStation 5 Spiderman 2 Bundle"
-        />
-        <p className="title">Sony PlayStation 5</p>
-        <p className="disc">Spiderman 2 Bundle</p>
-        <p className="price">$600.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('PlayStation 5 Spiderman 2 Bundle', 600.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="PS5G">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/PS5G.png"
-          alt="PlayStation 5 God of War Rognorok Bundle"
-        />
-        <p className="title">Sony PlayStation 5</p>
-        <p className="disc">God of War Rognorok Bundle</p>
-        <p className="price">$560.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('PlayStation 5 God of War Rognorok Bundle', 560.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="MXX">
-        {" "}
-        {/* Product */}
-        <img className="pImg" src="images/MXX.png" alt="Xbox Series X" />
-        <p className="title">Microsoft Xbox</p>
-        <p className="disc">Series X</p>
-        <p className="price">$500.00</p>
-        <button className="buy" onclick="addToCart('Xbox Series X', 500.00)">
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="MXS">
-        {" "}
-        {/* Product */}
-        <img className="pImg" src="images/MXS.png" alt="Xbox Series S" />
-        <p className="title">Microsoft Xbox</p>
-        <p className="disc">Series S</p>
-        <p className="price">$300.00</p>
-        <button className="buy" onclick="addToCart('Xbox Series S', 300.00)">
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="MXD">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/MXD.png"
-          alt="Xbox Series X Diable IV Bundle"
-        />
-        <p className="title">Microsoft Xbox</p>
-        <p className="disc">Series X Diablo IV Bundle</p>
-        <p className="price">$550.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Xbox Series X Diable IV Bundle', 550.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="MXH">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/MXH.png"
-          alt="Xbox Series X Halo Infinite Bundle"
-        />
-        <p className="title">Microsoft Xbox</p>
-        <p className="disc">Series X Halo Infinite Bundle</p>
-        <p className="price">$550.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Xbox Series X Halo Infinite Bundle', 550.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="NSW">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/NSW.png"
-          alt="Nintendo Switch Oled White"
-        />
-        <p className="title">Nintendo Switch Oled</p>
-        <p className="disc">White</p>
-        <p className="price">$350.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Nintendo Switch Oled White', 350.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="NSRB">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/NSRB.png"
-          alt="Nintendo Switch Oled Red and Blue"
-        />
-        <p className="title">Nintendo Switch Oled</p>
-        <p className="disc">Red and Blue</p>
-        <p className="price">$350.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Nintendo Switch Oled Red and Blue', 350.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="NSS">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/NSS.png"
-          alt="Nintendo Switch Oled Splatoon 3 Bundle"
-        />
-        <p className="title">Nintendo Switch Oled</p>
-        <p className="disc">Splatoon 3 Bundle</p>
-        <p className="price">$360.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Nintendo Switch Oled Splatoon 3 Bundle', 360.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="NSZ">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/NSZ.png"
-          alt="Nintendo Switch Oled Zelda Bundle"
-        />
-        <p className="title">Nintendo Switch Oled</p>
-        <p className="disc">Tears of the Kingdom Edition</p>
-        <p className="price">$360.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Nintendo Switch Oled Zelda Bundle', 360.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
     </section>
   </main>
-  <footer id="footer1">
-    <p id="f1">StockZ - Retail, Not Resale</p>
-    <div id="f2">
-      <div className="fBlock">
-        <a className="footLinkBold" href="/sneakers">
-          Sneakers
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/sneakers">
-          Jordan 1
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/sneakers">
-          Jordan 4
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/sneakers">
-          Dunk
-        </a>
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/apparel">
-          Apparel
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/apparel">
-          Supreme
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/apparel">
-          Essentials
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/apparel">
-          Vlone
-        </a>
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/electronics">
-          Electronics
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/electronics">
-          Playstation
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/electronics">
-          Xbox
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/electronics">
-          Nintendo
-        </a>{" "}
-        <br />
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/collectibles">
-          Collectibles
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/collectibles">
-          Skatebaords
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/collectibles">
-          Figures
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/collectibles">
-          Lego
-        </a>
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/contact">
-          Contact
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/contact">
-          FAQS
-        </a>
-        <br />
-        <a className="footLink" href="/contact">
-          Form
-        </a>
-        <br />
-        <a className="footLink" href="/contact">
-          Help
-        </a>
-        <br />
-      </div>
-    </div>
-  </footer>
-  <footer id="footer2">
-    <div>
-      <a href="https://www.facebook.com/">
-        <img className="fIcon" src="images/FB.png" alt="Facebook Logo" />
-      </a>
-      <a href="https://www.instagram.com/">
-        <img className="fIcon" src="images/IG.png" alt="Instagram Logo" />
-      </a>
-      <a href="https://twitter.com/">
-        <img className="fIcon" src="images/X.png" alt="Twitter Logo" />
-      </a>
-      <a href="https://www.youtube.com/">
-        <img className="fIcon" src="images/YT.png" alt="Youtube Logo" />
-      </a>
-    </div>
-    <div className="f3">
-      <p>©2023 StockZ. All Rights Reserved.</p>
-    </div>
-  </footer>
+  <Footer/>
 </>
   )
 }

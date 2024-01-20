@@ -1,9 +1,9 @@
 import React from 'react'
 
-export default function product(props) {
+export default function cartProd(props) {
   let url0=('http://localhost:5000')
   return (
-    <div className="product" id={props.pId}>
+    <div className="cartProd" id={props.pId}>
     {" "}
     {/* Product */}
     <img className="pImg" src={props.pImg} alt={props.pDesc} />
@@ -11,12 +11,11 @@ export default function product(props) {
     <p className="disc">{props.pDesc}</p>
     <p className="price">{props.pPrice}</p>
     <button
-      className="buy" id = {"buy"+props.pId}
-      onClick = {() => {fetch(url0+'/addToCart?pId='+props.pId)
-      const event = new Event('add');
-      document.dispatchEvent(event);
-    }}>
-        Add to Cart
+      className="remove" id = {"remove"+props.pId}
+      onClick = {() => {fetch(url0+'/removeFromCart?pId='+props.pId)
+      const event = new Event('remove');
+      document.dispatchEvent(event);}}>
+        Remove
     </button>
   </div>
   )

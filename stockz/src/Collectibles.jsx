@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import Product from './components/product';
+import CartProd from './components/cartProd';
 import Footer from './components/footer';
 import { createRoot } from 'react-dom/client';
 
@@ -8,23 +9,35 @@ export default function Collectibles() {
   console.log(url)
   let url0=('http://localhost:5000')
   console.log(url0)
-  var subTotal = 0;
+  var subTotal = 0.0;
   var counter = 0;
-  var prodGrid
   var root = ''
-  function addToCart(item, price){ //Adds items to cart
-    console.log(item+' has been added to cart');
-    // alert('Added to shopping cart.');
-    let docCart = document.getElementById('cart');
-    let newItem = document.createElement('p');
-    newItem.textContent = item + " : $" +price;
-    console.log(newItem);
-    docCart.appendChild(newItem);
-    subTotal += price;
-    document.getElementById('subTotal').textContent = 'Subtotal: $'+ subTotal;
-    showCartAdd();
-    setTimeout(hideCartAdd, 2000);
-}
+  var cartRoot = ""
+
+document.addEventListener('add', function() {
+  showCartAdd();
+  setTimeout(hideCartAdd, 2000);
+})
+
+document.addEventListener('remove', function() {
+  let cartItems = document.getElementById('cartItems')
+  subTotal=0
+  cartRoot = createRoot(cartItems)
+        if(cartRoot === ''){
+          cartRoot = createRoot(cartItems)
+        }
+  fetch(url0+'/getCart')
+          .then(response=>
+          response.json())
+          .then((data)=>{
+          data.forEach(product => {
+            subTotal+=parseFloat(product.prod_price)
+          });
+          cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
+          if(subTotal!==0)document.getElementById('removeAll').style.visibility='visible'
+          document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)})
+          if(subTotal===0)document.getElementById('removeAll').style.visibility='hidden'
+})
 
 function showCartAdd(){ //Show pop-up for adding item to cart
     document.getElementById('addToCart').style.zIndex ='1';
@@ -37,17 +50,51 @@ function hideCartAdd(){ //Hide pop-up
 }
 
 function showCart(){ //shows or hides cart
-    console.log('show')
+  let cart = document.getElementById('cart')
+  let cartItems = document.getElementById('cartItems')
     if(counter%2 === 0){
-        document.getElementById('cart').style.zIndex ='1';
-        document.getElementById('cart').style.width ='80%';
+        cart.style.zIndex ='1';
+        cart.style.width ='90%';
         counter++
+        subTotal=0
+        if(cartRoot === ''){
+          cartRoot = createRoot(cartItems)
+          cartItems.innerHTML=''
+        }
+        else{
+          cartRoot.render()
+        }
+        fetch(url0+'/getCart')
+          .then(response=>
+          response.json())
+          .then((data)=>{
+          data.forEach(product => {
+            subTotal+=parseFloat(product.prod_price)
+          });
+          cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
+          if(subTotal!==0)document.getElementById('removeAll').style.visibility='visible'
+          document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)})
     }
     else if(counter%2 === 1){
-        document.getElementById('cart').style.zIndex =-'1';
-        document.getElementById('cart').style.width ='0%';
+        cart.style.zIndex =-'1';
+        cart.style.width ='0%';
         counter++
     }
+}
+
+function clearCart(){ //shows or hides cart
+  let cartItems = document.getElementById('cartItems')
+  subTotal=0.0
+    if(cartRoot === ''){
+      cartRoot = createRoot(cartItems)
+      cartItems.innerHTML=''
+    }
+    else{
+      cartRoot.render()
+    }
+    fetch(url0+'/clearCart')
+    document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)
+    document.getElementById('removeAll').style.visibility='hidden'
 }
 
 function loadAnimation(){
@@ -82,7 +129,7 @@ function sortFilter(){
     response.json())
   .then((data)=>{
     console.log(data);
-      root.render(data.map((product) => <Product key = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price}/>))
+      root.render(data.map((product) => <Product key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
       prodGrid.style.visibility = 'visible'
       loadMsg.style.visibility = 'hidden'
       loadMsg.style.height = '0'
@@ -132,22 +179,23 @@ useEffect(()=>{
       <a className="navLink" href="/contact">
         Contact
       </a>
-      <button className="material-symbols-outlined">shopping_cart</button>
+      <button className="material-symbols-outlined" onClick={showCart}>shopping_cart</button>
     </nav>
   </header>
   <main>
     <section id="cart">
+      <button id = 'close' onClick={showCart}>X</button>
       <h2>Shopping Cart:</h2>
-      <h3 id="subTotal">Subtotal: $0</h3>
-      <br />
-      <br />
+      <div id = "cartItems"></div>
+      <button id="removeAll" onClick={()=>clearCart()}>Remove All</button>
+      <h3 id="subTotal">Subtotal: $0</h3>  
     </section>
     <br />
     <h4>Collectibles</h4>
     <br />
     <h2 id="addToCart">Added to Cart</h2>
     <div id = 'filters'>
-      <div class = 'filter'>
+      <div className = 'filter'>
         <label>Sort by: </label>
         <select id = "sort" onChange={()=>{sortFilter()}}>
           <option value="DEF">Featured</option>
@@ -155,334 +203,21 @@ useEffect(()=>{
           <option value="HTL">Price: High To Low</option>
         </select>
       </div>
-      <div class = 'filter'>
+      <div className = 'filter'>
         <label>Filter: </label>
         <select id = "filter" onChange={()=>{sortFilter()}}>
           <option value="ALL">All</option>
-          <option value="HT">Hot Toys</option>
-          <option value="LG">LEGO</option>
-          <option value="PL">Palace</option>
+          <option value="ES">Essentials</option>
+          <option value="SP">Supreme</option>
+          <option value="VL">Vlone</option>
         </select>
       </div>
     </div>
     <p id = 'loading'>Loading</p>
     <section className="grid1" id='prodGrid'>
-      {" "}
-      {/* Product Grid */}
-      <div className="product" id="SDS">
-        {" "}
-        {/* Product */}
-        <img className="pImg" src="images/SDS.png" alt="Palace Striped Deck" />
-        <p className="title">Palace</p>
-        <p className="disc">Striped Skate Deck</p>
-        <p className="price">$60.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Palace Striped Deck', 60.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="SDM">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/SDM.png"
-          alt="Palace McDonald's Deck"
-        />
-        <p className="title">Palace</p>
-        <p className="disc">McDonald's Skate Deck</p>
-        <p className="price">$60.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Palace McDonalds Deck', 60.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="SDA">
-        {" "}
-        {/* Product */}
-        <img className="pImg" src="images/SDA.png" alt="Palace AMG Deck" />
-        <p className="title">Palace</p>
-        <p className="disc">AMG Skate Deck</p>
-        <p className="price">$60.00</p>
-        <button className="buy" onclick="addToCart('Palace AMG Deck', 60.00)">
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="SDI">
-        {" "}
-        {/* Product */}
-        <img className="pImg" src="images/SDI.png" alt="Palace Infinity Deck" />
-        <p className="title">Palace</p>
-        <p className="disc">Infinity Skate Deck</p>
-        <p className="price">$60.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Palace Infinity Deck', 60.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="HTTH">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/HTTH.png"
-          alt="Hot Toys Endgame Thanos Figure"
-        />
-        <p className="title">Hot Toys</p>
-        <p className="disc">Endgame Thanos Figure</p>
-        <p className="price">$415.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Hot Toys Endgame Thanos Figure', 415.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="HTI">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/HTI.png"
-          alt="Hot Toys Endgame Iron Man Figure"
-        />
-        <p className="title">Hot Toys</p>
-        <p className="disc">Endgame Iron Man Figure</p>
-        <p className="price">$415.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Hot Toys Endgame Iron Man Figure', 415.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="HTC">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/HTC.png"
-          alt="Hot Toys Endgame Captain America Figure"
-        />
-        <p className="title">Hot Toys</p>
-        <p className="disc">Endgame Captain America Figure</p>
-        <p className="price">$275.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Hot Toys Endgame Captain America Figure', 275.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="HTT">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/HTT.png"
-          alt="Hot Toys Endgame Thor Figure"
-        />
-        <p className="title">Hot Toys</p>
-        <p className="disc">Endgame Thor Figure</p>
-        <p className="price">$275.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Hot Toys Endgame Thor Figure', 275.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="LSM">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/LSM.png"
-          alt="LEGO Star Wars Millennium Falcon Set"
-        />
-        <p className="title">LEGO</p>
-        <p className="disc">Star Wars Millennium Falcon Set</p>
-        <p className="price">$800.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('LEGO Star Wars Millennium Falcon Set', 800.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="LSA">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/LSA.png"
-          alt="LEGO Star Wars AT-AT Set"
-        />
-        <p className="title">LEGO</p>
-        <p className="disc">Star Wars AT-AT Set</p>
-        <p className="price">$800.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('LEGO Star Wars AT-AT Set', 800.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="LSI">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/LSI.png"
-          alt="LEGO Star Wars Star Destroyer Set"
-        />
-        <p className="title">LEGO</p>
-        <p className="disc">Star Wars Star Destroyer Set</p>
-        <p className="price">$700.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('LEGO Star Wars Star Destroyer Set', 700.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="LSX">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/LSX.png"
-          alt="LEGO Star Wars X-Wing Set"
-        />
-        <p className="title">LEGO</p>
-        <p className="disc">Star Wars X-Wing Set</p>
-        <p className="price">$240.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('LEGO Star Wars X-Wing Set', 240.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
     </section>
   </main>
-  <footer id="footer1">
-    <p id="f1">StockZ - Retail, Not Resale</p>
-    <div id="f2">
-      <div className="fBlock">
-        <a className="footLinkBold" href="/sneakers">
-          Sneakers
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/sneakers">
-          Jordan 1
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/sneakers">
-          Jordan 4
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/sneakers">
-          Dunk
-        </a>
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/apparel">
-          Apparel
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/apparel">
-          Supreme
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/apparel">
-          Essentials
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/apparel">
-          Vlone
-        </a>
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/electronics">
-          Electronics
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/electronics">
-          Playstation
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/electronics">
-          Xbox
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/electronics">
-          Nintendo
-        </a>{" "}
-        <br />
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/collectibles">
-          Collectibles
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/collectibles">
-          Skatebaords
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/collectibles">
-          Figures
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/collectibles">
-          Lego
-        </a>
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/contact">
-          Contact
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/contact">
-          FAQS
-        </a>
-        <br />
-        <a className="footLink" href="/contact">
-          Form
-        </a>
-        <br />
-        <a className="footLink" href="/contact">
-          Help
-        </a>
-        <br />
-      </div>
-    </div>
-  </footer>
-  <footer id="footer2">
-    <div>
-      <a href="https://www.facebook.com/">
-        <img className="fIcon" src="images/FB.png" alt="Facebook Logo" />
-      </a>
-      <a href="https://www.instagram.com/">
-        <img className="fIcon" src="images/IG.png" alt="Instagram Logo" />
-      </a>
-      <a href="https://twitter.com/">
-        <img className="fIcon" src="images/X.png" alt="Twitter Logo" />
-      </a>
-      <a href="https://www.youtube.com/">
-        <img className="fIcon" src="images/YT.png" alt="Youtube Logo" />
-      </a>
-    </div>
-    <div className="f3">
-      <p>©2023 StockZ. All Rights Reserved.</p>
-    </div>
-  </footer>
+  <Footer/>
 </>
   )
 }

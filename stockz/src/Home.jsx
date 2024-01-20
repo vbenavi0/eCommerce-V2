@@ -1,6 +1,16 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import CartProd from './components/cartProd';
+import Footer from './components/footer';
+import { createRoot } from 'react-dom/client';
 
 export default function Home() {
+  let url = window.location.href
+  console.log(url)
+  let url0=('http://localhost:5000')
+  console.log(url0)
+  var subTotal = 0.0;
+  var counter = 0;
+  var cartRoot = ""
   var index = 1;
   var heroId;
   function changeHero(){//change hero img
@@ -17,6 +27,74 @@ export default function Home() {
     document.getElementById(heroId).style.opacity = 1;
   }
   setInterval(changeHero, 3000);
+
+  document.addEventListener('remove', function() {
+    let cartItems = document.getElementById('cartItems')
+    subTotal=0
+    cartRoot = createRoot(cartItems)
+          if(cartRoot === ''){
+            cartRoot = createRoot(cartItems)
+          }
+    fetch(url0+'/getCart')
+            .then(response=>
+            response.json())
+            .then((data)=>{
+            data.forEach(product => {
+              subTotal+=parseFloat(product.prod_price)
+            });
+            cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
+            if(subTotal!==0)document.getElementById('removeAll').style.visibility='visible'
+            document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)})
+            if(subTotal===0)document.getElementById('removeAll').style.visibility='hidden'
+  })
+  
+  function showCart(){ //shows or hides cart
+    let cart = document.getElementById('cart')
+    let cartItems = document.getElementById('cartItems')
+      if(counter%2 === 0){
+          cart.style.zIndex ='1';
+          cart.style.width ='90%';
+          counter++
+          subTotal=0
+          if(cartRoot === ''){
+            cartRoot = createRoot(cartItems)
+            cartItems.innerHTML=''
+          }
+          else{
+            cartRoot.render()
+          }
+          fetch(url0+'/getCart')
+            .then(response=>
+            response.json())
+            .then((data)=>{
+            data.forEach(product => {
+              subTotal+=parseFloat(product.prod_price)
+            });
+            cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
+            if(subTotal!==0)document.getElementById('removeAll').style.visibility='visible'
+            document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)})
+      }
+      else if(counter%2 === 1){
+          cart.style.zIndex =-'1';
+          cart.style.width ='0%';
+          counter++
+      }
+  }
+  
+  function clearCart(){ //shows or hides cart
+    let cartItems = document.getElementById('cartItems')
+    subTotal=0.0
+      if(cartRoot === ''){
+        cartRoot = createRoot(cartItems)
+        cartItems.innerHTML=''
+      }
+      else{
+        cartRoot.render()
+      }
+      fetch(url0+'/clearCart')
+      document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)
+      document.getElementById('removeAll').style.visibility='hidden'
+  }
   return (
     <>
   <meta charSet="UTF-8" />
@@ -54,10 +132,17 @@ export default function Home() {
       <a className="navLink" href="/contact">
         Contact
       </a>
-      <button className="material-symbols-outlined">shopping_cart</button>
+      <button className="material-symbols-outlined" onClick={showCart}>shopping_cart</button>
     </nav>
   </header>
   <main>
+    <section id="cart">
+      <button id = 'close' onClick={showCart}>X</button>
+      <h2>Shopping Cart:</h2>
+      <div id = "cartItems"></div>
+      <button id="removeAll" onClick={()=>clearCart()}>Remove All</button>
+      <h3 id="subTotal">Subtotal: $0</h3>  
+    </section>
     <section id="about">
       <h2>About</h2>
       <p>We believe in selling at MSRP instead of upcharging our products.</p>
@@ -101,117 +186,7 @@ export default function Home() {
       </p>
     </section>
   </main>
-  <footer id="footer1">
-    <p id="f1">StockZ - Retail, Not Resale</p>
-    <div id="f2">
-      <div className="fBlock">
-        <a className="footLinkBold" href="/sneakers">
-          Sneakers
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/sneakers">
-          Jordan 1
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/sneakers">
-          Jordan 4
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/sneakers">
-          Dunk
-        </a>
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/apparel">
-          Apparel
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/apparel">
-          Supreme
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/apparel">
-          Essentials
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/apparel">
-          Vlone
-        </a>
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/electronics">
-          Electronics
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/electronics">
-          Playstation
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/electronics">
-          Xbox
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/electronics">
-          Nintendo
-        </a>{" "}
-        <br />
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/collectibles">
-          Collectibles
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/collectibles">
-          Skatebaords
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/collectibles">
-          Figures
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/collectibles">
-          Lego
-        </a>
-      </div>
-      <div className="fBlock">
-        <a className="footLinkBold" href="/contact">
-          Contact
-        </a>{" "}
-        <br />
-        <a className="footLink" href="/contact">
-          FAQS
-        </a>
-        <br />
-        <a className="footLink" href="/contact">
-          Form
-        </a>
-        <br />
-        <a className="footLink" href="/contact">
-          Help
-        </a>
-        <br />
-      </div>
-    </div>
-  </footer>
-  <footer id="footer2">
-    <div>
-      <a href="https://www.facebook.com/">
-        <img className="fIcon" src="images/FB.png" alt="Facebook Logo" />
-      </a>
-      <a href="https://www.instagram.com/">
-        <img className="fIcon" src="images/IG.png" alt="Instagram Logo" />
-      </a>
-      <a href="https://twitter.com/">
-        <img className="fIcon" src="images/X.png" alt="Twitter Logo" />
-      </a>
-      <a href="https://www.youtube.com/">
-        <img className="fIcon" src="images/YT.png" alt="Youtube Logo" />
-      </a>
-    </div>
-    <div className="f3">
-      <p>©2023 StockZ. All Rights Reserved.</p>
-    </div>
-  </footer>
+  <Footer/>
 </>
   )
 }

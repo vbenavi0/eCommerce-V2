@@ -21,6 +21,10 @@ connection.connect(function (err) { //attempt mysql connection function
  console.log('MySQL Database is Connected!');
 });
 
+let cartQuery = `DELETE FROM Ecom_Prods.cart WHERE prod_id!='';`
+console.log('Cart refresh')
+connection.query(cartQuery)
+
 app.get('/', (req, res)=>{
     res.send('Please enter a valid path')
 })
@@ -54,8 +58,7 @@ app.get('/sneakers', (req, res)=>{
     }
     sneakerQuery+=`;`
     console.log(sneakerQuery)
-    connection.query(sneakerQuery, function(error, data){
-        res.send(data)})
+    connection.query(sneakerQuery, function(error, data){res.send(data)})
 })
 
 app.get('/apparel', (req, res)=>{
@@ -87,8 +90,7 @@ app.get('/apparel', (req, res)=>{
     }
     apparelQuery+=`;`
     console.log(apparelQuery)
-    connection.query(apparelQuery, function(error, data){
-        res.send(data)})
+    connection.query(apparelQuery, function(error, data){res.send(data)})
 })
 
 app.get('/collectibles', (req, res)=>{
@@ -120,8 +122,7 @@ app.get('/collectibles', (req, res)=>{
     }
     collectiblesQuery+=`;`
     console.log(collectiblesQuery)
-    connection.query(collectiblesQuery, function(error, data){
-        res.send(data)})
+    connection.query(collectiblesQuery, function(error, data){res.send(data)})
 })
 
 app.get('/electronics', (req, res)=>{
@@ -155,6 +156,54 @@ app.get('/electronics', (req, res)=>{
     console.log(electronicsQuery)
     connection.query(electronicsQuery, function(error, data){
         res.send(data)})
+})
+
+app.get('/addToCart', (req, res)=>{
+    if(!req.query.pId){
+        return res.send({error: "You must provide an id query",})
+    }
+    let cartQuery = `INSERT INTO Ecom_Prods.cart SELECT * FROM Ecom_Prods.products WHERE prod_id='${req.query.pId}';`
+    console.log(cartQuery)
+    connection.query(cartQuery)
+    res.send(req.query.pId+' added to cart.')
+})
+
+app.get('/getCart', (req, res)=>{
+    let cartQuery = `SELECT * FROM Ecom_Prods.cart;`
+    console.log(cartQuery)
+    connection.query(cartQuery, function(error, data){res.send(data)})
+})
+
+app.get('/addToCart', (req, res)=>{
+    if(!req.query.pId){
+        return res.send({error: "You must provide an id query",})
+    }
+    let cartQuery = `INSERT INTO Ecom_Prods.cart SELECT * FROM Ecom_Prods.products WHERE prod_id='${req.query.pId}';`
+    console.log(cartQuery)
+    connection.query(cartQuery)
+    res.send(req.query.pId+' added to cart.')
+})
+
+app.get('/getCart', (req, res)=>{
+    let cartQuery = `SELECT * FROM Ecom_Prods.cart;`
+    console.log(cartQuery)
+    connection.query(cartQuery, function(error, data){res.send(data)})
+})
+
+app.get('/removeFromCart', (req, res)=>{
+    if(!req.query.pId){
+        return res.send({error: "You must provide an id query",})
+    }
+    let cartQuery = `DELETE FROM Ecom_Prods.cart WHERE prod_id='${req.query.pId}';`
+    console.log(cartQuery)
+    connection.query(cartQuery)
+    res.send(req.query.pId+' removed to cart.')
+})
+
+app.get('/clearCart', (req, res)=>{
+    let cartQuery = `DELETE FROM Ecom_Prods.cart WHERE prod_id!='';`
+    console.log(cartQuery)
+    connection.query(cartQuery, function(error, data){res.send('All items removed from cart.')})
 })
 
 app.listen(5000, ()=>{ //port is localhost:5000

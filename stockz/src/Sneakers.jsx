@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react'
 import Product from './components/product';
+import CartProd from './components/cartProd';
 import Footer from './components/footer';
 import { createRoot } from 'react-dom/client';
 
@@ -11,23 +12,35 @@ export default function Sneakers() {
   console.log(url)
   let url0=('http://localhost:5000')
   console.log(url0)
-  var subTotal = 0;
+  var subTotal = 0.0;
   var counter = 0;
-  var prodGrid
   var root = ''
-  function addToCart(item, price){ //Adds items to cart
-    console.log(item+' has been added to cart');
-    // alert('Added to shopping cart.');
-    let docCart = document.getElementById('cart');
-    let newItem = document.createElement('p');
-    newItem.textContent = item + " : $" +price;
-    console.log(newItem);
-    docCart.appendChild(newItem);
-    subTotal += price;
-    document.getElementById('subTotal').textContent = 'Subtotal: $'+ subTotal;
-    showCartAdd();
-    setTimeout(hideCartAdd, 2000);
-}
+  var cartRoot = ""
+
+document.addEventListener('add', function() {
+  showCartAdd();
+  setTimeout(hideCartAdd, 2000);
+})
+
+document.addEventListener('remove', function() {
+  let cartItems = document.getElementById('cartItems')
+  subTotal=0
+  cartRoot = createRoot(cartItems)
+        if(cartRoot === ''){
+          cartRoot = createRoot(cartItems)
+        }
+  fetch(url0+'/getCart')
+          .then(response=>
+          response.json())
+          .then((data)=>{
+          data.forEach(product => {
+            subTotal+=parseFloat(product.prod_price)
+          });
+          cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
+          if(subTotal!==0)document.getElementById('removeAll').style.visibility='visible'
+          document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)})
+          if(subTotal===0)document.getElementById('removeAll').style.visibility='hidden'
+})
 
 function showCartAdd(){ //Show pop-up for adding item to cart
     document.getElementById('addToCart').style.zIndex ='1';
@@ -40,17 +53,51 @@ function hideCartAdd(){ //Hide pop-up
 }
 
 function showCart(){ //shows or hides cart
-    console.log('show')
+  let cart = document.getElementById('cart')
+  let cartItems = document.getElementById('cartItems')
     if(counter%2 === 0){
-        document.getElementById('cart').style.zIndex ='1';
-        document.getElementById('cart').style.width ='80%';
+        cart.style.zIndex ='1';
+        cart.style.width ='90%';
         counter++
+        subTotal=0
+        if(cartRoot === ''){
+          cartRoot = createRoot(cartItems)
+          cartItems.innerHTML=''
+        }
+        else{
+          cartRoot.render()
+        }
+        fetch(url0+'/getCart')
+          .then(response=>
+          response.json())
+          .then((data)=>{
+          data.forEach(product => {
+            subTotal+=parseFloat(product.prod_price)
+          });
+          cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
+          if(subTotal!==0)document.getElementById('removeAll').style.visibility='visible'
+          document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)})
     }
     else if(counter%2 === 1){
-        document.getElementById('cart').style.zIndex =-'1';
-        document.getElementById('cart').style.width ='0%';
+        cart.style.zIndex =-'1';
+        cart.style.width ='0%';
         counter++
     }
+}
+
+function clearCart(){ //shows or hides cart
+  let cartItems = document.getElementById('cartItems')
+  subTotal=0.0
+    if(cartRoot === ''){
+      cartRoot = createRoot(cartItems)
+      cartItems.innerHTML=''
+    }
+    else{
+      cartRoot.render()
+    }
+    fetch(url0+'/clearCart')
+    document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)
+    document.getElementById('removeAll').style.visibility='hidden'
 }
 
 function loadAnimation(){
@@ -85,7 +132,7 @@ function sortFilter(){
     response.json())
   .then((data)=>{
     console.log(data);
-      root.render(data.map((product) => <Product key = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price}/>))
+      root.render(data.map((product) => <Product key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
       prodGrid.style.visibility = 'visible'
       loadMsg.style.visibility = 'hidden'
       loadMsg.style.height = '0'
@@ -138,17 +185,18 @@ useEffect(()=>{
   </header>
   <main>
     <section id="cart">
+      <button id = 'close' onClick={showCart}>X</button>
       <h2>Shopping Cart:</h2>
-      <h3 id="subTotal">Subtotal: $0</h3>
-      <br />
-      <br />
+      <div id = "cartItems"></div>
+      <button id="removeAll" onClick={()=>clearCart()}>Remove All</button>
+      <h3 id="subTotal">Subtotal: $0</h3>  
     </section>
     <br />
     <h4>Sneakers</h4>
     <br />
     <h2 id="addToCart">Added to Cart</h2>
     <div id = 'filters'>
-      <div class = 'filter'>
+      <div className = 'filter'>
         <label>Sort by: </label>
         <select id = "sort" onChange={()=>{sortFilter()}}>
           <option value="DEF">Featured</option>
@@ -156,203 +204,19 @@ useEffect(()=>{
           <option value="HTL">Price: High To Low</option>
         </select>
       </div>
-      <div class = 'filter'>
+      <div className = 'filter'>
         <label>Filter: </label>
         <select id = "filter" onChange={()=>{sortFilter()}}>
           <option value="ALL">All</option>
-          <option value="DL">Dunk</option>
-          <option value="J1">Jordan 1</option>
-          <option value="J4">Jordan 4</option>
+          <option value="ES">Essentials</option>
+          <option value="SP">Supreme</option>
+          <option value="VL">Vlone</option>
         </select>
       </div>
     </div>
     <p id = 'loading'>Loading</p>
     <section className="grid1" id='prodGrid'>
     <Product pName = "Jordan 1 Retro High" pDesc = "Bred Toe" pImg = "images/J1R.png" pPrice = "$200"></Product>
-      {" "}
-      {/* Product Grid */}
-      <div className="product" id="J1R">
-        {" "}
-        {/* Product */}
-        <img className="pImg" src="images/J1R.png" alt="Jordan 1 Bred Toe" />
-        <p className="title">Jordan 1 Retro High</p>
-        <p className="disc">Bred Toe</p>
-        <p className="price">$160.00</p>
-        <button
-          className="buy"
-          onClick = {() => {addToCart('Jordan 1 Bred Toe', 160.00)}}
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="J1B">
-        {" "}
-        {/* Product */}
-        <img className="pImg" src="images/J1B.png" alt="Jordan 1 Royal Toe" />
-        <p className="title">Jordan 1 Retro High</p>
-        <p className="disc">Royal Toe</p>
-        <p className="price">$160.00</p>
-        <button
-          className="buy"
-          onClick = {() => {addToCart('Jordan 1 Royal Toe', 160.00)}}
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="J1G">
-        {" "}
-        {/* Product */}
-        <img className="pImg" src="images/J1G.png" alt="Jordan 1 Pine Green" />
-        <p className="title">Jordan 1 Retro High</p>
-        <p className="disc">Pine Green</p>
-        <p className="price">$160.00</p>
-        <button
-          className="buy"
-          onClick = {() => {addToCart('Jordan 1 Pine Green', 160.00)}}
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="J1P">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/J1P.png"
-          alt="Jordan 1 Court Purple"
-        />
-        <p className="title">Jordan 1 Retro High</p>
-        <p className="disc">Court Purple</p>
-        <p className="price">$160.00</p>
-        <button
-          className="buy"
-          onClick = {() => {addToCart('Jordan 1 Court Purple', 160.00)}}
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="J4B">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/J4B.png"
-          alt="Jordan 4 Black Canvas"
-        />
-        <p className="title">Jordan 4 Retro</p>
-        <p className="disc">Black Canvas</p>
-        <p className="price">$210.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Jordan 4 Black Canvas', 210.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="J4T">
-        {" "}
-        {/* Product */}
-        <img className="pImg" src="images/J4T.png" alt="Jordan 4 Thunder" />
-        <p className="title">Jordan 4 Retro</p>
-        <p className="disc">Thunder</p>
-        <p className="price">$210.00</p>
-        <button className="buy" onclick="addToCart('Jordan 4 Thunder', 210.00)">
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="J4W">
-        {" "}
-        {/* Product */}
-        <img className="pImg" src="images/J4W.png" alt="Jordan 4 White Oreo" />
-        <p className="title">Jordan 4 Retro</p>
-        <p className="disc">White Oreo</p>
-        <p className="price">$210.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Jordan 4 White Oreo', 210.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="J4R">
-        {" "}
-        {/* Product */}
-        <img className="pImg" src="images/J4R.png" alt="Jordan 4 Fire Red" />
-        <p className="title">Jordan 4 Retro</p>
-        <p className="disc">Fire Red</p>
-        <p className="price">$210.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Jordan 4 Fire Red', 210.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="DLP">
-        {" "}
-        {/* Product */}
-        <img className="pImg" src="images/DLP.png" alt="Dunk Low Panda" />
-        <p className="title">Dunk Low Retro</p>
-        <p className="disc">Panda</p>
-        <p className="price">$110.00</p>
-        <button className="buy" onclick="addToCart('Dunk Low Panda', 110.00)">
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="DLW">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/DLW.png"
-          alt="Dunk Low Pure Platinum"
-        />
-        <p className="title">Dunk Low Retro</p>
-        <p className="disc">Pure Platinum</p>
-        <p className="price">$110.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Dunk Low Pure Platinum', 110.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="DLR">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/DLR.png"
-          alt="Dunk Low University Red"
-        />
-        <p className="title">Dunk Low Retro</p>
-        <p className="disc">University Red</p>
-        <p className="price">$110.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Dunk Low University Red', 110.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
-      <div className="product" id="DLB">
-        {" "}
-        {/* Product */}
-        <img
-          className="pImg"
-          src="images/DLB.png"
-          alt="Dunk Low Hyper Cobalt"
-        />
-        <p className="title">Dunk Low Retro</p>
-        <p className="disc">Hyper Cobalt</p>
-        <p className="price">$110.00</p>
-        <button
-          className="buy"
-          onclick="addToCart('Dunk Low Hyper Cobalt', 110.00)"
-        >
-          Add to Cart
-        </button>
-      </div>
     </section>
   </main>
   <Footer/>
