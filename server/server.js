@@ -11,17 +11,18 @@ app.set({
 });
 
 const connection = mysql.createConnection({ //create new mysql connection
- host: 'localhost', //our computer
- database: 'Ecom_Prods', //schema name to use
- user: 'root', //user belonging to
- password: 'password', //database password
+ host: 'sql5.freesqldatabase.com', //our computer
+ database: 'sql5678420', //schema name to use
+ user: 'sql5678420', //user belonging to
+ password: 'z46sZT2ePy', //database password
+ port: '3306'
 });
 connection.connect(function (err) { //attempt mysql connection function
  if (err) throw err;
  console.log('MySQL Database is Connected!');
 });
 
-let cartQuery = `DELETE FROM Ecom_Prods.cart WHERE prod_id!='';`
+let cartQuery = `DELETE FROM cart WHERE prod_id!='';`
 console.log('Cart refresh')
 connection.query(cartQuery)
 
@@ -36,7 +37,7 @@ app.get('/sneakers', (req, res)=>{
     if(!req.query.filter){
         return res.send({error: "You must provide a filter query",})
     }
-    let sneakerQuery = `SELECT * FROM Ecom_Prods.products WHERE prod_cat = 'Sneakers'`
+    let sneakerQuery = `SELECT * FROM products WHERE prod_cat = 'Sneakers'`
     switch(req.query.filter){
         case('J1'):
             sneakerQuery+=` AND prod_name='Jordan 1 Retro High'`
@@ -68,7 +69,7 @@ app.get('/apparel', (req, res)=>{
     if(!req.query.filter){
         return res.send({error: "You must provide a filter query",})
     }
-    let apparelQuery = `SELECT * FROM Ecom_Prods.products WHERE prod_cat = 'Apparel'`
+    let apparelQuery = `SELECT * FROM products WHERE prod_cat = 'Apparel'`
     switch(req.query.filter){
         case('ES'):
             apparelQuery+=` AND prod_name='Essentials'`
@@ -100,7 +101,7 @@ app.get('/collectibles', (req, res)=>{
     if(!req.query.filter){
         return res.send({error: "You must provide a filter query",})
     }
-    let collectiblesQuery = `SELECT * FROM Ecom_Prods.products WHERE prod_cat = 'Collectibles'`
+    let collectiblesQuery = `SELECT * FROM products WHERE prod_cat = 'Collectibles'`
     switch(req.query.filter){
         case('HT'):
             collectiblesQuery+=` AND prod_name='Hot Toys'`
@@ -132,7 +133,7 @@ app.get('/electronics', (req, res)=>{
     if(!req.query.filter){
         return res.send({error: "You must provide a filter query",})
     }
-    let electronicsQuery = `SELECT * FROM Ecom_Prods.products WHERE prod_cat = 'Electronics'`
+    let electronicsQuery = `SELECT * FROM products WHERE prod_cat = 'Electronics'`
     switch(req.query.filter){
         case('XB'):
             electronicsQuery+=` AND prod_name='Microsoft Xbox'`
@@ -162,30 +163,14 @@ app.get('/addToCart', (req, res)=>{
     if(!req.query.pId){
         return res.send({error: "You must provide an id query",})
     }
-    let cartQuery = `INSERT INTO Ecom_Prods.cart SELECT * FROM Ecom_Prods.products WHERE prod_id='${req.query.pId}';`
+    let cartQuery = `INSERT INTO cart SELECT * FROM products WHERE prod_id='${req.query.pId}' AND NOT EXISTS (SELECT * FROM cart WHERE prod_id='${req.query.pId}');`
     console.log(cartQuery)
     connection.query(cartQuery)
     res.send(req.query.pId+' added to cart.')
 })
 
 app.get('/getCart', (req, res)=>{
-    let cartQuery = `SELECT * FROM Ecom_Prods.cart;`
-    console.log(cartQuery)
-    connection.query(cartQuery, function(error, data){res.send(data)})
-})
-
-app.get('/addToCart', (req, res)=>{
-    if(!req.query.pId){
-        return res.send({error: "You must provide an id query",})
-    }
-    let cartQuery = `INSERT INTO Ecom_Prods.cart SELECT * FROM Ecom_Prods.products WHERE prod_id='${req.query.pId}';`
-    console.log(cartQuery)
-    connection.query(cartQuery)
-    res.send(req.query.pId+' added to cart.')
-})
-
-app.get('/getCart', (req, res)=>{
-    let cartQuery = `SELECT * FROM Ecom_Prods.cart;`
+    let cartQuery = `SELECT * FROM cart;`
     console.log(cartQuery)
     connection.query(cartQuery, function(error, data){res.send(data)})
 })
@@ -194,14 +179,14 @@ app.get('/removeFromCart', (req, res)=>{
     if(!req.query.pId){
         return res.send({error: "You must provide an id query",})
     }
-    let cartQuery = `DELETE FROM Ecom_Prods.cart WHERE prod_id='${req.query.pId}';`
+    let cartQuery = `DELETE FROM cart WHERE prod_id='${req.query.pId}';`
     console.log(cartQuery)
     connection.query(cartQuery)
     res.send(req.query.pId+' removed to cart.')
 })
 
 app.get('/clearCart', (req, res)=>{
-    let cartQuery = `DELETE FROM Ecom_Prods.cart WHERE prod_id!='';`
+    let cartQuery = `DELETE FROM cart WHERE prod_id!='';`
     console.log(cartQuery)
     connection.query(cartQuery, function(error, data){res.send('All items removed from cart.')})
 })
