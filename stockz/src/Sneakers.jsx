@@ -8,14 +8,16 @@ import { createRoot } from 'react-dom/client';
 // import ReactDOM from 'react-dom'
 
 export default function Sneakers() {
-  let url = window.location.href
-  console.log(url)
-  let url0=('http://localhost:5000')
+  let url0=('https://stockz-3c3j.onrender.com')
   console.log(url0)
   var subTotal = 0.0;
   var counter = 0;
   var root = ''
   var cartRoot = ""
+  let USDollar = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+});
 
 document.addEventListener('add', function() {
   showCartAdd();
@@ -25,6 +27,7 @@ document.addEventListener('add', function() {
 document.addEventListener('remove', function() {
   let cartItems = document.getElementById('cartItems')
   subTotal=0
+  if(subTotal===0)document.getElementById('removeAll').style.visibility='hidden'
   cartRoot = createRoot(cartItems)
         if(cartRoot === ''){
           cartRoot = createRoot(cartItems)
@@ -36,10 +39,9 @@ document.addEventListener('remove', function() {
           data.forEach(product => {
             subTotal+=parseFloat(product.prod_price)
           });
-          cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
+          cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {product.prod_price} pCat = {product.prod_cat}/>))
           if(subTotal!==0)document.getElementById('removeAll').style.visibility='visible'
-          document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)})
-          if(subTotal===0)document.getElementById('removeAll').style.visibility='hidden'
+          document.getElementById('subTotal').innerText=('Subtotal: '+USDollar.format(subTotal))})
 })
 
 function showCartAdd(){ //Show pop-up for adding item to cart
@@ -74,9 +76,9 @@ function showCart(){ //shows or hides cart
           data.forEach(product => {
             subTotal+=parseFloat(product.prod_price)
           });
-          cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
+          cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {product.prod_price} pCat = {product.prod_cat}/>))
           if(subTotal!==0)document.getElementById('removeAll').style.visibility='visible'
-          document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)})
+          document.getElementById('subTotal').innerText=('Subtotal: '+USDollar.format(subTotal))})
     }
     else if(counter%2 === 1){
         cart.style.zIndex =-'1';
@@ -96,7 +98,7 @@ function clearCart(){ //shows or hides cart
       cartRoot.render()
     }
     fetch(url0+'/clearCart')
-    document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)
+    document.getElementById('subTotal').innerText=('Subtotal: '+USDollar.format(subTotal))
     document.getElementById('removeAll').style.visibility='hidden'
 }
 
@@ -125,14 +127,12 @@ function sortFilter(){
   var sortBy = document.getElementById('sort').value
   var filterBy = document.getElementById('filter').value
   prodGrid.style.visibility = 'hidden'
-  console.log(sortBy)
-  console.log('http://localhost:5000/sneakers?sort='+sortBy+'&filter='+filterBy)
+  console.log(url0+'/sneakers?sort='+sortBy+'&filter='+filterBy)
   fetch(url0+'/sneakers?sort='+sortBy+'&filter='+filterBy)
   .then(response=>
     response.json())
   .then((data)=>{
-    console.log(data);
-      root.render(data.map((product) => <Product key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
+      root.render(data.map((product) => <Product key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {product.prod_price} pCat = {product.prod_cat}/>))
       prodGrid.style.visibility = 'visible'
       loadMsg.style.visibility = 'hidden'
       loadMsg.style.height = '0'
@@ -140,7 +140,6 @@ function sortFilter(){
     })
 }
 useEffect(()=>{
-  console.log('loaded')
   sortFilter();
 }, [])
   return (
@@ -189,7 +188,7 @@ useEffect(()=>{
       <h2>Shopping Cart:</h2>
       <div id = "cartItems"></div>
       <button id="removeAll" onClick={()=>clearCart()}>Remove All</button>
-      <h3 id="subTotal">Subtotal: $0</h3>  
+      <h3 id="subTotal">Subtotal: $0.00</h3>  
     </section>
     <br />
     <h4>Sneakers</h4>
@@ -208,15 +207,14 @@ useEffect(()=>{
         <label>Filter: </label>
         <select id = "filter" onChange={()=>{sortFilter()}}>
           <option value="ALL">All</option>
-          <option value="ES">Essentials</option>
-          <option value="SP">Supreme</option>
-          <option value="VL">Vlone</option>
+          <option value="DL">Dunk</option>
+          <option value="J1">Jordan 1</option>
+          <option value="J4">Jordan 4</option>
         </select>
       </div>
     </div>
     <p id = 'loading'>Loading</p>
     <section className="grid1" id='prodGrid'>
-    <Product pName = "Jordan 1 Retro High" pDesc = "Bred Toe" pImg = "images/J1R.png" pPrice = "$200"></Product>
     </section>
   </main>
   <Footer/>

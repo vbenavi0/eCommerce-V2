@@ -9,13 +9,16 @@ export default function Contact() {
   var uQuestion;
   var uComment;
   var warning;
-  let url = window.location.href
-  console.log(url)
-  let url0=('http://localhost:5000')
+  let url0=('https://stockz-3c3j.onrender.com')
   console.log(url0)
   var subTotal = 0.0;
   var counter = 0;
   var cartRoot = ""
+  let USDollar = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+});
+
   function formSubmit(){ //form validation
     warning = "";
     document.getElementById('warning').innerHTML = ""
@@ -53,7 +56,6 @@ export default function Contact() {
     }
 
     if(warning === ""){
-        console.log('submit');
         document.getElementById('warning').innerHTML = "";
         document.getElementById('submission').textContent=(`Successfully Submitted: Name: ${uName.value}, Email: ${uEmail.value}, Question: ${uQuestion.value}, Comment: ${uComment.value}`);
         showSubmit();
@@ -74,6 +76,7 @@ function hideSubmit(){ //Hides User Submission
 document.addEventListener('remove', function() {
   let cartItems = document.getElementById('cartItems')
   subTotal=0
+  if(subTotal===0)document.getElementById('removeAll').style.visibility='hidden'
   cartRoot = createRoot(cartItems)
         if(cartRoot === ''){
           cartRoot = createRoot(cartItems)
@@ -85,21 +88,10 @@ document.addEventListener('remove', function() {
           data.forEach(product => {
             subTotal+=parseFloat(product.prod_price)
           });
-          cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
+          cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {product.prod_price} pCat = {product.prod_cat}/>))
           if(subTotal!==0)document.getElementById('removeAll').style.visibility='visible'
-          document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)})
-          if(subTotal===0)document.getElementById('removeAll').style.visibility='hidden'
+          document.getElementById('subTotal').innerText=('Subtotal: '+USDollar.format(subTotal))})
 })
-
-function showCartAdd(){ //Show pop-up for adding item to cart
-    document.getElementById('addToCart').style.zIndex ='1';
-    document.getElementById('addToCart').style.width ='80%';
-}
-
-function hideCartAdd(){ //Hide pop-up
-    document.getElementById('addToCart').style.zIndex ='-1';
-    document.getElementById('addToCart').style.width ='0%';
-}
 
 function showCart(){ //shows or hides cart
   let cart = document.getElementById('cart')
@@ -123,9 +115,9 @@ function showCart(){ //shows or hides cart
           data.forEach(product => {
             subTotal+=parseFloat(product.prod_price)
           });
-          cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {'$'+product.prod_price} pCat = {product.prod_cat}/>))
+          cartRoot.render(data.map((product) => <CartProd key = {product.prod_id} pId = {product.prod_id} pName = {product.prod_name} pDesc = {product.prod_desc} pImg = {product.prod_img} pPrice = {product.prod_price} pCat = {product.prod_cat}/>))
           if(subTotal!==0)document.getElementById('removeAll').style.visibility='visible'
-          document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)})
+          document.getElementById('subTotal').innerText=('Subtotal: '+USDollar.format(subTotal))})
     }
     else if(counter%2 === 1){
         cart.style.zIndex =-'1';
@@ -145,7 +137,7 @@ function clearCart(){ //shows or hides cart
       cartRoot.render()
     }
     fetch(url0+'/clearCart')
-    document.getElementById('subTotal').innerText=('Subtotal: $'+subTotal)
+    document.getElementById('subTotal').innerText=('Subtotal: '+USDollar.format(subTotal))
     document.getElementById('removeAll').style.visibility='hidden'
 }
 
@@ -195,7 +187,7 @@ function clearCart(){ //shows or hides cart
       <h2>Shopping Cart:</h2>
       <div id = "cartItems"></div>
       <button id="removeAll" onClick={()=>clearCart()}>Remove All</button>
-      <h3 id="subTotal">Subtotal: $0</h3>  
+      <h3 id="subTotal">Subtotal: $0.00</h3>  
     </section>
     <br />
     <h4>Contact</h4>
