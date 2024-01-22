@@ -4,8 +4,8 @@ eCommerce Project V2 - StockZ
 
 ## Overview
 
-StockZ is an eCommerce website that features products ranging from sneakers and apparel to electronics and even collectibles
-StockZ was built using React, Express, and MySQL
+* StockZ is an eCommerce website that features products ranging from sneakers and apparel to electronics and even collectibles
+* StockZ was built using React, Express, and MySQL
 
 ## Features
 
