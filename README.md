@@ -22,11 +22,11 @@ eCommerce Project V2 - StockZ
 * Change Directory to StockZ & use npm start to start the front-end
 * Use localhost:3000 for the application
 * Wait for back-end data to load from the hosted server
-  
-## Authors
-
-* Victor Benavides
 
 ## Hosted Version
 
 * https://e-commerce-v2-xqhp.vercel.app/
+
+## Authors
+
+* Victor Benavides
